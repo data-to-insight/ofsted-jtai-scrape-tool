@@ -1106,9 +1106,6 @@ while True:
 inspection_summary_df = pd.DataFrame(data)
 
 
-# # testing
-# print(inspection_summary_df.head(5))
-
 # Data enrichment - import flat-file stored data 
 #
 
