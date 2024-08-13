@@ -631,15 +631,13 @@ def process_provider_links(provider_links):
                 filename = nonvisual_text.replace(', pdf', '') + '.pdf'
 
 
-
-                # # For reference:
-                # # at this point, example var contents would be: 
-                # print(f"pdflink:{pdf_link}")                # e.g. "<a class="publication-link" href="https://files.ofsted.gov.uk/v1/file/50252437" target="_blank">
-                #                                             # Area SEND full inspection                <span class="nonvisual">Area SEND full inspection, pdf - 15 July 2024</span></a>"
-                # print(f"nonvisualtext:{nonvisual_text}")    # e.g. "area send full inspection, pdf - 15 july 2024"
-                # print(f"filename:{filename}")               # e.g. "area send full inspection - 15 july 2024.pdf"
+                # For reference:
+                # at this point, example var contents would be: 
+                print(f"pdflink:{pdf_link}")                # e.g. "<a class="publication-link" href="https://files.ofsted.gov.uk/v1/file/50000230" target="_blank">"
+                                                            # "Joint area child protection inspection                <span class="nonvisual">Joint area child protection inspection, pdf - 14 July 2017</span></a>"
+                print(f"nonvisualtext:{nonvisual_text}")    # e.g. "joint area child protection inspection, pdf - 14 july 2017"
+                print(f"filename:{filename}")               # e.g. "joint area child protection inspection - 14 july 2017.pdf"
            
-
 
                 pdf_content = requests.get(pdf_link['href']).content
                 with open(os.path.join(provider_dir, filename), 'wb') as f:
