@@ -550,12 +550,14 @@ def parse_date_new(date_input, date_format=None, output_format="%d/%m/%y", retur
         return date_obj.strftime(output_format)
     
 
-def extract_first_two_sentences(text):
+def extract_sentences(text):
+
+    # testing: 2,3+ initial sentences? 
     if text:
         # Split the text by periods
         sentences = re.split(r'(?<=[.!?]) +', text)
-        # Join the first two sentences (or one if only one exists)
-        first_two_sentences = ' '.join(sentences[:2])
+        # Join the first X sentences (or one if only one exists)
+        first_two_sentences = ' '.join(sentences[:3])
         return first_two_sentences
     return "Not found or not applicable."
 
@@ -594,26 +596,60 @@ def process_provider_links(provider_links):
         child_url = 'https://reports.ofsted.gov.uk' + link['href']
         child_soup = get_soup(child_url)
 
+        # ## # publ_date new
+        # # Find all blocks that contain both the publication link and the time tag
+        # publication_blocks = child_soup.find_all('span', {'class': 'event__title heading--sub'})
+
+        # # Initialize a list to store the results
+        # publications = []
+
+        # # Loop through each block to extract the PDF link, nonvisual text, and the publication date
+        # for block in publication_blocks:
+        #     # Find the publication link
+        #     link_tag = block.find('a', {'class': 'publication-link'})
+        #     if link_tag and 'href' in link_tag.attrs:
+        #         pdf_link = link_tag['href']
+                
+        #         # Find the nonvisual text within the link tag
+        #         nonvisual_text = link_tag.select_one('span.nonvisual').text.lower().strip() if link_tag.select_one('span.nonvisual') else None
+                
+        #         # Find the associated publication date
+        #         time_tag = block.find('time', {'pubdate': ''})
+        #         publication_date = time_tag.get_text(strip=True) if time_tag else None
+                
+        #         # Store the extracted data in a dictionary
+        #         publications.append({
+        #             'pdf_link': pdf_link,
+        #             'nonvisual_text': nonvisual_text,
+        #             'publication_date': publication_date
+        #         }) # publ_date new
+
         # Find all publication links in the provider's child page
-        pdf_links = child_soup.find_all('a', {'class': 'publication-link'})
+        pdf_links = child_soup.find_all('a', {'class': 'publication-link'}) # publ_date
 
 
+    
         # Initialise a flag to indicate if an inspection link has been found
         # Important: This assumes that the provider's reports are returned/organised most recent FIRST
         found_inspection_link = False
 
         # Iterate through the publication links
         for pdf_link in pdf_links:
+        # for publication in publications: # publ_date new
 
             # E.g. Publication link contains
             # <a class="publication-link" href="https://files.ofsted.gov.uk/v1/file/50252240" target="_blank">
 
 
+            # pdf_link = publication['pdf_link'] # publ_date new
+            # pdf_link_date = publication['publication_date'] # publ_date new
+
             # Check if the current/next href-link meets the selection criteria
             # This block obv relies on Ofsted continued use of nonvisual element descriptors
             # containing the type(s) of inspection text. We use  "children's services inspection"
 
-            nonvisual_text = pdf_link.select_one('span.nonvisual').text.lower().strip()
+            nonvisual_text = pdf_link.select_one('span.nonvisual').text.lower().strip() # publ_date
+            # nonvisual_text = publication['nonvisual_text'] # publ_date new
 
             # For reference:
             # At this point <nonvisual_text> contains a mixed batch of the following:
@@ -623,13 +659,24 @@ def process_provider_links(provider_links):
             # children's services focused visit, pdf - 07 november 2023
             # area send full inspection, pdf - 12 july 2024
 
+
+            # Extract the publication date from the <time> tag associated with the link
+            # This assumes the <time> tag is within a parent element of the <a> tag
+            # Searches the nearest <div> with class "event__metadata" and find the <time> tag within it
+            publication_date = None
+            metadata_div = pdf_link.find_parent('span', {'class': 'event__title heading--sub'}).find('div', {'class': 'event__metadata'})
+            if metadata_div:
+                time_tag = metadata_div.find('time', {'pubdate': ''})
+                if time_tag:
+                    publication_date = time_tag.text.strip()
+
             # For now at least, web page|non-visual elements search terms hard-coded
             # For this scrape looking for 'Joint area child protection inspection'
             if 'joint' in nonvisual_text and 'area' in nonvisual_text and 'inspection' in nonvisual_text:
 
                 # Create the filename and download the PDF (this filetype needs to be hard-coded here)
                 filename = nonvisual_text.replace(', pdf', '') + '.pdf'
-
+                
 
                 # # For reference:
                 # # at this point, example var contents would be: 
@@ -638,8 +685,8 @@ def process_provider_links(provider_links):
                 # print(f"nonvisualtext:{nonvisual_text}")    # e.g. "joint area child protection inspection, pdf - 14 july 2017"
                 # print(f"filename:{filename}")               # e.g. "joint area child protection inspection - 14 july 2017.pdf"
            
-
-                pdf_content = requests.get(pdf_link['href']).content
+                # pdf_content = requests.get(pdf_link).content # publ_date new
+                pdf_content = requests.get(pdf_link['href']).content  # publ_date
                 with open(os.path.join(provider_dir, filename), 'wb') as f:
                     f.write(pdf_content)
 
@@ -652,11 +699,16 @@ def process_provider_links(provider_links):
 
 
                 # Define regular expressions for the sections
-                priority_action_pattern = re.compile(r"Areas for priority action\s*(.*?)\s*Areas for improvement", re.DOTALL | re.IGNORECASE)
-                improvement_pattern = re.compile(r"Areas for improvement\s*(.*?)$", re.DOTALL | re.IGNORECASE)
-                key_strengths_pattern = re.compile(r"Key strengths\s*(.*?)$", re.DOTALL | re.IGNORECASE)
-                headline_findings_pattern = re.compile(r"Headline findings\s*(.*?)$", re.DOTALL | re.IGNORECASE)
-                needs_to_improve_pattern = re.compile(r"What needs to improve\s*(.*?)$", re.DOTALL | re.IGNORECASE)
+                # ignores case, except for first letter as this is guarenteed within a heading (the rest less so)
+                priority_action_pattern = re.compile(r"Areas for [Pp]riority [Aa]ction\s*(.*?)$", re.DOTALL)
+                improvement_pattern = re.compile(r"Areas for [Ii]mprovement\s*(.*?)$", re.DOTALL)
+                key_strengths_pattern = re.compile(r"Key [Ss]trengths\s*(.*?)$", re.DOTALL)
+                headline_findings_pattern = re.compile(r"Headline [Ff]indings\s*(.*?)$", re.DOTALL)
+                needs_to_improve_pattern = re.compile(r"What [Nn]eeds to [Ii]mprove\s*(.*?)$", re.DOTALL)
+
+                # case_study_pattern = re.compile(r"Case [Ss]tudy:\s*(.*?)\s*(?:NextSection|$)", re.DOTALL | re.IGNORECASE)
+                case_study_pattern = re.compile(r"Case [Ss]tudy:\s*(.*)", re.DOTALL | re.IGNORECASE) # capture ALL after this heading
+
 
                 # Extract sections
                 priority_action_match = priority_action_pattern.search(pdf_pages_content)
@@ -665,6 +717,12 @@ def process_provider_links(provider_links):
                 headline_findings_match = headline_findings_pattern.search(pdf_pages_content)
                 needs_to_improve_match = needs_to_improve_pattern.search(pdf_pages_content)
 
+                case_study_match = case_study_pattern.search(pdf_pages_content)
+
+
+                # testing
+                #print(case_study_match)
+
                 # Extracted text or None if not found
                 areas_for_priority_action = priority_action_match.group(1).strip() if priority_action_match else None
                 areas_for_improvement = improvement_match.group(1).strip() if improvement_match else None
@@ -672,33 +730,67 @@ def process_provider_links(provider_links):
                 headline_findings = headline_findings_match.group(1).strip() if headline_findings_match else None
                 needs_to_improve = needs_to_improve_match.group(1).strip() if needs_to_improve_match else None
 
-                # Get the first two sentences only - used in reduced output summary
-                summary_priority_action = extract_first_two_sentences(areas_for_priority_action)
-                summary_improvement = extract_first_two_sentences(areas_for_improvement)
-                summary_key_strengths = extract_first_two_sentences(key_strengths)     
-                summary_headline_findings = extract_first_two_sentences(headline_findings)     
-                summary_needs_to_improve = extract_first_two_sentences(needs_to_improve)
 
+                if case_study_match and len(case_study_match.groups()) > 0:
+                    # Extract the full text after "Case study:"
+                    case_study_text = case_study_match.group(1).strip()
+
+                    # Truncate after the first capital letter that follows some lowercase text
+                    truncation_match = re.search(r'^(.*?)(?=\s[A-Z])', case_study_text)
+                    if truncation_match:
+                        case_study_title = "Case study: " + truncation_match.group(1).strip()
+                    else:
+                        case_study_title = "Case study: " + case_study_text.strip()
+
+                    # Now, clean up any initial text before the first capital letter in the remaining text
+                    cleaned_match = re.search(r'[A-Z].*', case_study_text)
+                    if cleaned_match:
+                        case_study_body = cleaned_match.group(0).strip()
+                    else:
+                        case_study_body = case_study_text
+
+                    ## Debug / testing
+                    # print("Case Study Heading:", case_study_title)  
+                    # print("Case Study Body:", case_study_body)  
+      
+                else:
+                    # No case study data / heading(s) found
+                    case_study_body = None
+                    case_study_title = None
+
+
+                # Get the first two sentences only - used in reduced output summary
+                summary_priority_action = extract_sentences(areas_for_priority_action)
+                summary_improvement = extract_sentences(areas_for_improvement)
+                summary_key_strengths = extract_sentences(key_strengths)     
+                summary_headline_findings = extract_sentences(headline_findings)     
+                summary_needs_to_improve = extract_sentences(needs_to_improve)
+
+                summary_case_study = extract_sentences(case_study_body)
+                #print(summary_case_study)
 
                # Extract the local authority and inspection link, and add the data to the list
                 if not found_inspection_link:
 
                     # Capture the data that will be exported about the most recent inspection only
                     local_authority = provider_dir.split('_', 1)[-1].replace('_', ' ').strip()
-                    inspection_link = pdf_link['href']
+                    # inspection_link = requests.get(pdf_link).content # publ_date new
+                    inspection_link = pdf_link['href'] # publ_date
                     
                     # #testing
                     # print(f"la:{local_authority}")
                     # print(f"inspectionlink:{inspection_link}")
 
             
+                    report_published_date_str = publication_date # publ_date new
 
-                    # Extract the report published date
-                    report_published_date_str = filename.split('-')[-1].strip().split('.')[0] # published date appears after '-' 
+                    # # Extract the report published date
+                    # report_published_date_str = filename.split('-')[-1].strip().split('.')[0] # published date appears after '-'  # publ_date
             
                     # get/format date(s) (as dt objects)
+                    ## revised to capture 'actual' published date from css tag data
                     report_published_date = format_date(report_published_date_str, '%d %B %Y', '%d/%m/%y')
-
+                    print(f"Debug: Report Published Date: {report_published_date} was {publication_date}")
 
 
                     # Now get the in-document data
@@ -756,12 +848,13 @@ def process_provider_links(provider_links):
                                         'local_link_to_all_inspections':    provider_dir_link,
                                         
                                         # 'main_inspection_topics': main_inspection_topics
-                                        'summary_priority_action':          summary_priority_action,    # 2 sentences only
-                                        'summary_improvement':              summary_improvement,        # 2 sentences only
-                                        'summary_key_strengths':            summary_key_strengths,      # 2 sentences only
-                                        'summary_headline_findings':        summary_headline_findings,      # 2 sentences only
-                                        'summary_needs_to_improve':         summary_needs_to_improve,      # 2 sentences only
-   
+                                        'summary_priority_action':          summary_priority_action,        # reduced sentences only
+                                        'summary_improvement':              summary_improvement,            # reduced sentences only
+                                        'summary_key_strengths':            summary_key_strengths,          # reduced sentences only
+                                        'summary_headline_findings':        summary_headline_findings,      # reduced sentences only
+                                        'summary_needs_to_improve':         summary_needs_to_improve,       # reduced sentences only
+                                        'case_study_title':                 case_study_title,
+                                        'summary_case_study':               summary_case_study              # reduced sentences only
                                         # 'inspector_name':         inspector_name,
 
                                         # 'sentiment_score': sentiment_score,
@@ -944,7 +1037,7 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     disclaimer_text = (
         'Disclaimer: This summary is built from scraped data direct from https://reports.ofsted.gov.uk/ published PDF inspection report files. '
         'As a result of the nuances|variance within the inspection report content or pdf encoding, we\'re noting some problematic data extraction for a small number of LAs*.<br/> '
-        '*Known extraction issues: JTAI reports structure varies, pre|post 2023. ADCS published inspection Themes unavailable via current scrape process. Publication date currently duplicates inspection date. <br/>'
+        '*Known extraction issues: JTAI report structure varies pre|post 2023. ADCS published inspection Themes unavailable via current scrape process. Publication date is based on CSS tag data and may not always reflect actual report publication. Where 1+ case studies are reported on, only 1 is pulled through.<br/>'
         '<a href="mailto:datatoinsight.enquiries@gmail.com?subject=Ofsted-Scrape-Tool">Feedback</a> on specific problems|inaccuracies|suggestions welcomed.*'
     )
 
@@ -973,10 +1066,12 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     #     data[local_link_column] = data[local_link_column].apply(lambda x: '<a href="' + x + '">all_reports\\' + x.split("\\")[-1] + '</a>')
 
 
-    # If a web link column is specified, convert that column's values to HTML hyperlinks
-    # Shortening the hyperlink text by taking the part after the last '/'
+    # # If a web link column is specified, convert that column's values to HTML hyperlinks
+    # # Shortening the hyperlink text by taking the part after the last '/'
     if web_link_column:
-        data[web_link_column] = data[web_link_column].apply(lambda x: f'<a href="{x}">ofsted.gov.uk/{x.rsplit("/", 1)[-1]}</a>')
+        data[web_link_column] = data[web_link_column].apply(lambda x: f'<a href="{x}">ofsted.gov.uk/{x.rsplit("/", 1)[-1]}</a>') # publ_date
+    # if web_link_column:
+    #     data[web_link_column] = data[web_link_column].apply(lambda x: f'<a href="{x}">ofsted.gov.uk/{x.rsplit("/", 1)[-1]}</a>' if isinstance(x, str) else x)  # publ_date
 
     # Convert column names to title/upper case
     data.columns = [c.replace('_', ' ').title() for c in data.columns]
@@ -1162,6 +1257,8 @@ column_order = [
                 'summary_key_strengths',
                 'summary_headline_findings',
                 'summary_needs_to_improve',
+                'case_study_title',
+                'summary_case_study',
                 'publication_date', 
                 #'local_link_to_all_inspections', 
                 'inspection_link'
