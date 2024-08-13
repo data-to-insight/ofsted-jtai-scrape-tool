@@ -263,7 +263,7 @@ def extract_dates_from_text(text):
     # ..
 
     """
-    print("Debug: Starting date extraction")
+    # print("Debug: Starting date extraction")
 
     if not text:
         print("Debug: Input text is empty or None.")
@@ -287,7 +287,7 @@ def extract_dates_from_text(text):
         try:
             # Convert to desired format if needed
             start_date = datetime.strptime(start_date_str, "%d %B %Y").strftime("%d/%m/%y")
-            print(f"Extracted Date: {start_date}")
+            # print(f"Extracted Date: {start_date}")
         except ValueError as ve:
             print(f"Error converting date: {ve}")
             raise ValueError("Date conversion failed")
@@ -343,7 +343,7 @@ def extract_inspection_data_update(pdf_content):
         # for page in reader.pages:
         #     full_text += page.extract_text()
 
-    #   # Carry over for ref from ILACS. Not used in SEND
+    #   # Carry over for ref from ILACS. Not used in JTAI
     #     # Find the inspector's name using a regular expression
     #     match = re.search(r"Lead inspector:\s*(.+)", first_page_text)
     #     if match:
@@ -436,27 +436,18 @@ def extract_text_from_pdf(pdf_bytes):
     # Open the PDF from bytes
     pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
     
+    # Extract all text from the PDF
     extracted_text = ""
     
-    # Iterate through each page
+    # Use a loop to extract the text from all pages at once
     for page_num in range(len(pdf_document)):
         page = pdf_document.load_page(page_num)
         extracted_text += page.get_text("text")
-    
-    return extracted_text
 
-
-def extract_text_by_pages(pdf_bytes):
-    # supercedes extract_text_from_pdf in combo with remove_unwanted_sections
-    pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-    pages = []
+    # Remove any non-printable characters from the extracted text
+    cleaned_text = re.sub(r'[^\x20-\x7E\n]', '', extracted_text)
     
-    for page_num in range(len(pdf_document)):
-        page = pdf_document.load_page(page_num)
-        text = page.get_text("text")
-        pages.append(text)
-    
-    return pages
+    return cleaned_text
 
 
 def clean_text(text):
@@ -559,6 +550,16 @@ def parse_date_new(date_input, date_format=None, output_format="%d/%m/%y", retur
         return date_obj.strftime(output_format)
     
 
+def extract_first_two_sentences(text):
+    if text:
+        # Split the text by periods
+        sentences = re.split(r'(?<=[.!?]) +', text)
+        # Join the first two sentences (or one if only one exists)
+        first_two_sentences = ' '.join(sentences[:2])
+        return first_two_sentences
+    return "Not found or not applicable."
+
+
 
 def process_provider_links(provider_links):
     """
@@ -644,8 +645,42 @@ def process_provider_links(provider_links):
                 with open(os.path.join(provider_dir, filename), 'wb') as f:
                     f.write(pdf_content)
 
-  
-                # pdf_pages_content = extract_text_by_pages(pdf_content)
+    
+                pdf_pages_content = extract_text_from_pdf(pdf_content)
+                # print(f"PDF content: {pdf_pages_content[600:800]}...")
+
+                pdf_pages_content = clean_text(pdf_pages_content)
+                pdf_pages_content = pdf_pages_content.replace('?', '') # work-around, some spurious ? remaining
+
+
+                # Define regular expressions for the sections
+                priority_action_pattern = re.compile(r"Areas for priority action\s*(.*?)\s*Areas for improvement", re.DOTALL | re.IGNORECASE)
+                improvement_pattern = re.compile(r"Areas for improvement\s*(.*?)$", re.DOTALL | re.IGNORECASE)
+                key_strengths_pattern = re.compile(r"Key strengths\s*(.*?)$", re.DOTALL | re.IGNORECASE)
+                headline_findings_pattern = re.compile(r"Headline findings\s*(.*?)$", re.DOTALL | re.IGNORECASE)
+                needs_to_improve_pattern = re.compile(r"What needs to improve\s*(.*?)$", re.DOTALL | re.IGNORECASE)
+
+                # Extract sections
+                priority_action_match = priority_action_pattern.search(pdf_pages_content)
+                improvement_match = improvement_pattern.search(pdf_pages_content)
+                key_strengths_match = key_strengths_pattern.search(pdf_pages_content)
+                headline_findings_match = headline_findings_pattern.search(pdf_pages_content)
+                needs_to_improve_match = needs_to_improve_pattern.search(pdf_pages_content)
+
+                # Extracted text or None if not found
+                areas_for_priority_action = priority_action_match.group(1).strip() if priority_action_match else None
+                areas_for_improvement = improvement_match.group(1).strip() if improvement_match else None
+                key_strengths = key_strengths_match.group(1).strip() if key_strengths_match else None
+                headline_findings = headline_findings_match.group(1).strip() if headline_findings_match else None
+                needs_to_improve = needs_to_improve_match.group(1).strip() if needs_to_improve_match else None
+
+                # Get the first two sentences only - used in reduced output summary
+                summary_priority_action = extract_first_two_sentences(areas_for_priority_action)
+                summary_improvement = extract_first_two_sentences(areas_for_improvement)
+                summary_key_strengths = extract_first_two_sentences(key_strengths)     
+                summary_headline_findings = extract_first_two_sentences(headline_findings)     
+                summary_needs_to_improve = extract_first_two_sentences(needs_to_improve)
+
 
                # Extract the local authority and inspection link, and add the data to the list
                 if not found_inspection_link:
@@ -714,21 +749,25 @@ def process_provider_links(provider_links):
                         #print(f"next_inspection_by_date(after processing): {next_inspection_by_date}")
 
                         data.append({
-                                        'urn': urn,
-                                        'local_authority':          la_name_str,
-                                        'inspection_link':          inspection_link,
+                                        'urn':                              urn,
+                                        'local_authority':                  la_name_str,
+                                        'inspection_link':                  inspection_link,
 
-                                        'inspection_start_date':    inspection_start_date_formatted,
-                                        'publication_date':         report_published_date,
-                                        'local_link_to_all_inspections': provider_dir_link,
-                                        # 'inspection_outcome_text':  inspection_outcome_section,
-
-                                        # 'inspection_framework':   inspection_framework,
+                                        'inspection_start_date':            inspection_start_date_formatted,
+                                        'publication_date':                 report_published_date,
+                                        'local_link_to_all_inspections':    provider_dir_link,
+                                        
+                                        # 'main_inspection_topics': main_inspection_topics
+                                        'summary_priority_action':          summary_priority_action,    # 2 sentences only
+                                        'summary_improvement':              summary_improvement,        # 2 sentences only
+                                        'summary_key_strengths':            summary_key_strengths,      # 2 sentences only
+                                        'summary_headline_findings':        summary_headline_findings,      # 2 sentences only
+                                        'summary_needs_to_improve':         summary_needs_to_improve,      # 2 sentences only
+   
                                         # 'inspector_name':         inspector_name,
 
                                         # 'sentiment_score': sentiment_score,
                                         # 'sentiment_summary': sentiment_summary,
-                                        # 'main_inspection_topics': main_inspection_topics
 
                                     })
                         
@@ -1061,18 +1100,16 @@ while True:
     # Process the provider links and extend the data list with the results
     data.extend(process_provider_links(provider_links))
 
-    
-    # Since all results are on a single page, no need to handle pagination. 
     # Processing complete.   
     break
 
 
-
 # Convert the 'data' list to a DataFrame
-send_inspection_summary_df = pd.DataFrame(data)
+inspection_summary_df = pd.DataFrame(data)
+
 
 # # testing
-# print(send_inspection_summary_df.head(5))
+# print(inspection_summary_df.head(5))
 
 # Data enrichment - import flat-file stored data 
 #
@@ -1092,36 +1129,21 @@ send_inspection_summary_df = pd.DataFrame(data)
 local_authorities_lookup_df = import_csv_from_folder(import_la_data_path) # bring external data in
 
 # print(local_authorities_lookup_df.head(3))
-# print(send_inspection_summary_df.head(3)) # empty
+# print(inspection_summary_df.head(3)) # empty
 
 
 # Ensure key column consistency
 key_col = 'urn'
-send_inspection_summary_df['urn'] = send_inspection_summary_df['urn'].astype('int64')
+inspection_summary_df['urn'] = inspection_summary_df['urn'].astype('int64')
 local_authorities_lookup_df['urn'] = pd.to_numeric(local_authorities_lookup_df['urn'], errors='coerce')
 
 # # Define what data is required to be merged in
 additional_data_cols = ['la_code', 'region_code', 'ltla23cd', 'stat_neighbours']
-send_inspection_summary_df = merge_and_select_columns(send_inspection_summary_df, local_authorities_lookup_df, key_col, additional_data_cols)
+inspection_summary_df = merge_and_select_columns(inspection_summary_df, local_authorities_lookup_df, key_col, additional_data_cols)
 
 # re-organise column structure now with new col(s)
-send_inspection_summary_df = reposition_columns(send_inspection_summary_df, key_col, additional_data_cols)
+inspection_summary_df = reposition_columns(inspection_summary_df, key_col, additional_data_cols)
 ## End enrichment 1 ##
-
-
-
-
-# #
-# # Fix(tmp) towards resultant export data types/excel cols type or format
-
-# # 020523 - Appears as though this is not having the desired effect once export file opened in Excel.
-# # Needs looking at again i.e. Urn still exporting as 'text' column
-
-# ilacs_inspection_summary_df['urn'] = pd.to_numeric(ilacs_inspection_summary_df['urn'], errors='coerce')
-# ilacs_inspection_summary_df['la_code'] = pd.to_numeric(ilacs_inspection_summary_df['la_code'], errors='coerce')
-# # end tmp fix
-
-
 
 
 
@@ -1131,7 +1153,7 @@ send_inspection_summary_df = reposition_columns(send_inspection_summary_df, key_
 
 # EXCEL Output
 # Also define the active hyperlink col if exporting to Excel
-save_data_update(send_inspection_summary_df, export_summary_filename, file_type=export_file_type, hyperlink_column='local_link_to_all_inspections')
+save_data_update(inspection_summary_df, export_summary_filename, file_type=export_file_type, hyperlink_column='local_link_to_all_inspections')
 
 
 # WEB Output
@@ -1140,14 +1162,18 @@ save_data_update(send_inspection_summary_df, export_summary_filename, file_type=
 column_order = [
                 'urn','la_code','region_code','ltla23cd','local_authority',
                 'inspection_start_date', 
-                # 'inspection_outcome_text',
+                'summary_priority_action',
+                'summary_improvement',
+                'summary_key_strengths',
+                'summary_headline_findings',
+                'summary_needs_to_improve',
                 'publication_date', 
                 #'local_link_to_all_inspections', 
                 'inspection_link'
                 ]
 
 
-save_to_html(send_inspection_summary_df, column_order, local_link_column='local_link_to_all_inspections', web_link_column='inspection_link')
+save_to_html(inspection_summary_df, column_order, local_link_column='local_link_to_all_inspections', web_link_column='inspection_link')
 
 
 print("Last output date and time: ", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
