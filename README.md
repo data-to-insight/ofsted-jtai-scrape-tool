@@ -15,18 +15,18 @@ The scrape process is completed by running a single Python script: ofsted_childr
 ## Export(s)
 There are currently three exports from the script. 
 ### Results HTML page
-Generated (as ./index.html) to display a refreshed subset of the SEND results summary. 
+Generated (as ./index.html) to display a refreshed subset of the JTAI results summary. 
 
 ### Results Overview Summary
-The complete SEND overview spreadsheet, exported to the git project root ./ as an .xlsx file for ease and also accessible via a download link from the generated results page (index.html)
+The complete JTAI overview spreadsheet, exported to the git project root ./ as an .xlsx file for ease and also accessible via a download link from the generated results page (index.html)
 
 ### All CS inspections reports
 During the scrape process, because we scan all the related CS inspection pdf reports for each LA; these can be/are packaged up into tidy LA named folders (urn_LAname) within the git repo (./export_data/inspection_reports/). There is a lot of data here, but if you download the entire export_data folder after the script has run, with the overview summary sheet then the local_inspection_reports column active links will work and you can then easily access each LA's previous reports all in once place via the supplied hyperlink(s). *Note:* This is currently not an option when viewing the results on the web page/Git Pages.
 
 ## Known Bugs
 Some LA's inspection reports have PDF encoding or inconsistent data in the published reports that is causing extraction issues & null data. 
-We're working to address these, current known  issues are:
-- tbc
+We're working to address these, current known  issues are: JTAI reports have no consistent|common structure to extract content from. JTAI report 'Themes' have no consistent structure. Publication date currently duplicates inspection date, as extracting this from the inspection report text isn't possible and will require an additional process to access the main Ofsted inspections listings. 
+
 
 
 ## Imports(s)
@@ -56,7 +56,7 @@ This part of some ongoing work to access data we can use to enrich the Ofsted da
 ## Script admin notes
 Simplified notes towards repo/script admin processes and enabling/instructions for non-admin running. 
 ### Script run intructions (User)
-If looking to obtain a full instant refresh of the SEND output, the ofsted_childrens_services_inspection_scrape.PY should be run. These instructions for running in the cloud/Github. 
+If looking to obtain a full instant refresh of the JTAI output, the ofsted_childrens_services_inspection_scrape.PY should be run. These instructions for running in the cloud/Github. 
 - Create a new Codespace (on main)
 - Type run the following bash script at Terminal prompt to set up './setup.sh'
 - Run the script - can right click script file and select 'run in python....'
@@ -66,7 +66,7 @@ If looking to obtain a full instant refresh of the SEND output, the ofsted_child
 ### Run notes (Admin)
 If you experience a permissions error running the setup bash file. 
 
-/workspaces/ofsted-send-scrape-tool (main) $ ./setup.sh
+/workspaces/ofsted-jtai-scrape-tool (main) $ ./setup.sh
 bash: ./setup.sh: Permission denied
 
 then type the following, and try again: 
