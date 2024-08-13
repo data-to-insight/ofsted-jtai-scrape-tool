@@ -631,12 +631,12 @@ def process_provider_links(provider_links):
                 filename = nonvisual_text.replace(', pdf', '') + '.pdf'
 
 
-                # For reference:
-                # at this point, example var contents would be: 
-                print(f"pdflink:{pdf_link}")                # e.g. "<a class="publication-link" href="https://files.ofsted.gov.uk/v1/file/50000230" target="_blank">"
-                                                            # "Joint area child protection inspection                <span class="nonvisual">Joint area child protection inspection, pdf - 14 July 2017</span></a>"
-                print(f"nonvisualtext:{nonvisual_text}")    # e.g. "joint area child protection inspection, pdf - 14 july 2017"
-                print(f"filename:{filename}")               # e.g. "joint area child protection inspection - 14 july 2017.pdf"
+                # # For reference:
+                # # at this point, example var contents would be: 
+                # print(f"pdflink:{pdf_link}")                # e.g. "<a class="publication-link" href="https://files.ofsted.gov.uk/v1/file/50000230" target="_blank">"
+                #                                             # "Joint area child protection inspection                <span class="nonvisual">Joint area child protection inspection, pdf - 14 July 2017</span></a>"
+                # print(f"nonvisualtext:{nonvisual_text}")    # e.g. "joint area child protection inspection, pdf - 14 july 2017"
+                # print(f"filename:{filename}")               # e.g. "joint area child protection inspection - 14 july 2017.pdf"
            
 
                 pdf_content = requests.get(pdf_link['href']).content
@@ -938,7 +938,7 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
         '<a href="ofsted_childrens_services_jtai_overview.xlsx">download here</a> as an .xlsx file. '
         '<br/>Data summary is based on the original <i>JTAI Outcomes Summary</i> published periodically by the ADCS: '
         '<a href="https://www.adcs.org.uk/inspection-of-childrens-services/">https://www.adcs.org.uk/inspection-of-childrens-services/</a>. '
-        '<a href="https://github.com/data-to-insight/ofsted-send-scrape-tool/blob/main/README.md">Read the tool/project background details and future work.</a>.'
+        '<a href="https://github.com/data-to-insight/ofsted-jtai-scrape-tool/blob/main/README.md">Read the tool/project background details and future work.</a>.'
     )
 
     disclaimer_text = (
