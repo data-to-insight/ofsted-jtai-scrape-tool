@@ -1,13 +1,13 @@
-# Ofsted-SEND-Scrape-Tool
-On demand Ofsted SEND results summary via inspection reports scrape from the Ofsted.gov pages
-Published: https://data-to-insight.github.io/ofsted-send-scrape-tool/
+# Ofsted-JTAI-Scrape-Tool
+On demand Ofsted JTAI results summary via inspection reports scrape from the Ofsted.gov pages
+Published: https://data-to-insight.github.io/ofsted-jtai-scrape-tool/
 -
-### The automated daily update of this SEND summary page is not currently running; in the intrim we're running it manually on a weekly basis.  
+### Updates to this JTAI summary page occur on a weekly basis.  
 
 ## Brief overview
 This project is based on a proof-of-concept, 'can we do this' basis. As such it's supplied very much with the disclaimer of please check the vitals if you're embedding it into something more critical, and likewise pls feel free to feedback into the project with suggestions. The structure of the code and processes have much scope for improvement, but some of the initial emphasis was on maintaining a level of readability so that others might have an easier time of taking it further. That said, we needed to take some of the scrape/cleaning processes further than anticipated due to inconsistencies in the source site/data and this has ultimately impacted the intended 're-usable mvp' approach to codifying a solution for the original problem. 
 
-The results structure and returned data is based almost entirely on the originating SEND Summary produced/refreshed periodically by the ADCS; the use of which has previously underpinned several D2I projects. We're aware of several similar collections of longer-term work on and surrounding the Ofsted results theme, and would be happy to hear from those who perhaps also have bespoke ideas for changes here that would assist their own work. 
+The results structure and returned data is based almost entirely on the originating JTAI Summary produced/refreshed periodically by the ADCS; the use of which has previously underpinned several D2I projects. We're aware of several similar collections of longer-term work on and surrounding the Ofsted results theme, and would be happy to hear from those who perhaps also have bespoke ideas for changes here that would assist their own work. 
 
 The scrape process is completed by running a single Python script: ofsted_childrens_services_inspection_scrape.py
 
@@ -39,7 +39,7 @@ This part of some ongoing work to access data we can use to enrich the Ofsted da
 
 ## Future work
 
-- Some of the in-progress efforts are included as a point of discuss or stepping stone for others to develop within the download .xlsx file. For example a set of columns detailing simplistic inspection sentiment analysis based on the language used in the most recent report (ref cols: sentiment_score, inspectors_median_sentiment_score, sentiment_summary, main_inspection_topics). *Note that the inclusion of these columns does not dictate that the scores are accurate, these additions are a starting point for discussion|suggestions and development!!*
+- Some of the in-progress efforts are included as a point of discuss or stepping stone for others to develop within the download .xlsx file. For example a set of columns detailing simplistic inspection sentiment analysis based on the language used in the most recent report (ref cols: sentiment_score, inspectors_median_sentiment_score, sentiment_summary, main_inspection_topics). *Note that the inclusion of these columns does not dictate that the scores are accurate, these additions are a starting point for discussion|suggestions and development.*
 
 - Geographical/Geospatial visualisations of results by region, la etc. are in progress. The basis for this is aready in place but some anomolies with how LA/counties boundary data is configured is an issue for some and thus the representation requires a bit more thought. 
 
@@ -59,8 +59,8 @@ Simplified notes towards repo/script admin processes and enabling/instructions f
 If looking to obtain a full instant refresh of the SEND output, the ofsted_childrens_services_inspection_scrape.PY should be run. These instructions for running in the cloud/Github. 
 - Create a new Codespace (on main)
 - Type run the following bash script at Terminal prompt to set up './setup.sh'
-- Run the script (can right click script file and select 'run in python....'
-- Download the now refreshed ofsted_childrens_services_inspection_scrape.XLSX (Right click, download)
+- Run the script - can right click script file and select 'run in python....'
+- Download the now refreshed ofsted_childrens_services_jtai_overview.XLSX (Right click, download)
 - Close codespace (Github will auto-remove unused spaces later)
   
 ### Run notes (Admin)

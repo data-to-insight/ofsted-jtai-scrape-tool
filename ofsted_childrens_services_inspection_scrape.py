@@ -1,7 +1,7 @@
 #
 # Export options
 
-export_summary_filename = 'ofsted_childrens_services_send_overview'
+export_summary_filename = 'ofsted_childrens_services_jtai_overview'
 # export_file_type         = 'csv' # Excel / csv currently supported
 export_file_type         = 'excel'
 
@@ -23,7 +23,7 @@ pdf_data_capture = True # True is default (scrape within pdf inspection reports 
                         # False == only pdfs/list of LA's+link to most recent exported. Not inspection results.
 
 
-repo_path = '/workspaces/ofsted-send-scrape-tool'
+repo_path = '/workspaces/ofsted-jtai-scrape-tool'
 
 
 
@@ -203,21 +203,6 @@ def parse_date(date_str, date_format):
     except (TypeError, ValueError):
         return None
     
-
-def format_date_for_report_BAK(date_obj, output_format_str):
-    """
-    Formats a datetime object as a string in the d/m/y format, or returns an empty string if the input is None.
-
-    Args:
-        date_obj (datetime.datetime or None): The datetime object to format, or None.
-
-    Returns:
-        str: The formatted date string, or an empty string if date_obj is None.
-    """
-    if date_obj is not None:
-        return date_obj.strftime(output_format_str)
-    else:
-        return ""
     
 def format_date_for_report(date_input, output_format_str, input_format_str=None):
     """
@@ -275,17 +260,10 @@ def extract_dates_from_text(text):
     tuple: A tuple containing the start and end dates as strings in the format 'dd/mm/yy'.
 
     Notes:
-    # Some clean up based on historic data obs from scraped reports/incl. ILACS
-        # Ofsted reports contain inspection date strings in multiple formats (i/ii/iii...)
-        #   i)      "15 to 26 November"  
-        #   ii)     "28 February to 4 March" or "8 October to 19 October" (majority)
-        #   iii)    ['8 July ', '12 July   and 7 August  to'] (*recently seen)
-        #   iv)     "11 September 2017 to 5 October 2017" (double year)
-        #   v)      "Inspection dates: 19 November–30 November 2018" (Bromley)
-        #   vi)     white spaces between date numbers e.g. "wiltshire,	1 9 June 2019"
-        #   vii)    'None' years where no recognisable was found
+    # ..
+
     """
-    # print("Debug: Starting date extraction")
+    print("Debug: Starting date extraction")
 
     if not text:
         print("Debug: Input text is empty or None.")
@@ -296,80 +274,31 @@ def extract_dates_from_text(text):
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
 
     # Preprocess the inspection_dates to fix split years, e.g. 20 23, 20 24 -> 2023, 2024
-    cleaned_text = re.sub(r"(\b20)\s+(\d{2}\b)", r"\1\2", cleaned_text)
-    #print(f"Debug: Cleaned text: {cleaned_text}")
+    # As yet not required in JTAI pdfs
+    # cleaned_text = re.sub(r"(\b20)\s+(\d{2}\b)", r"\1\2", cleaned_text)
 
-
-
-
-    # Try to capture date ranges correctly
-    # date_match = re.search(r"Inspection dates:\s*(.+?)(?=\s{2,}|$)", cleaned_text) - doesnt work for oxfordshire
-    # date_match = re.search(r"Inspection dates\s*:\s*(\d{1,2}(?: to \d{1,2})? \w+ \d{4})", cleaned_text)
-
-    # # Not implemented. But in case need to handle cases of repeating year alongside known repeating month "13 July 2023 to 21 July 2023" e.g. West Sussex
-    # date_match = re.search(r"Inspection dates\s*:\s*(\d{1,2}(?: \w+ \d{4})?(?: to \d{1,2})? \w+ \d{4})", cleaned_text)
-    date_match = re.search(r"Inspection dates\s*:\s*(\d{1,2} \w+ \d{4}) to (\d{1,2} \w+ \d{4})", cleaned_text)
-
+    # Try to capture date correctly
+    date_match = re.search(r"(\d{1,2} \w+ \d{4})", cleaned_text)
 
     if date_match:
-        #print(f"Debug: Primary date match found: {date_match.group(0)}")
-        # Extract start and end dates directly from the match
+        # Extract the single date directly from the match
         start_date_str = date_match.group(1).strip()
-        end_date_str = date_match.group(2).strip()
-    else:
-        #print("Debug: Primary date match not found, trying fallback method")
-        # Fallback to capturing single date or simpler range within the same month
-        date_match = re.search(r"Inspection dates\s*:\s*(\d{1,2}) to (\d{1,2}) (\w+) (\d{4})", cleaned_text)
-
-        if date_match:
-            #print(f"Debug: Fallback date match found: {date_match.group(0)}")
-            start_day = date_match.group(1)
-            end_day = date_match.group(2)
-            month = date_match.group(3)
-            year = date_match.group(4)
-
-            start_date_str = f"{start_day} {month} {year}"
-            end_date_str = f"{end_day} {month} {year}"
-
-        else:
-            print("Debug: No inspection dates found.")
-            raise ValueError("No inspection dates found")
-
-    # Clean and format the extracted dates
-    try:
-        start_date = datetime.strptime(start_date_str, "%d %B %Y").strftime("%d/%m/%y")
-        end_date = datetime.strptime(end_date_str, "%d %B %Y").strftime("%d/%m/%y")
-        #print(f"Debug: Formatted start date: {start_date}")
-        #print(f"Debug: Formatted end date: {end_date}")
-    except ValueError as ve:
-        print(f"Error converting date: {ve}")
-        raise ValueError("Date conversion failed")
-
-    # Now handle previous inspection dates if present in the same cleaned_text
-    previous_inspection_match = re.search(r"Dates? of previous inspection:\s*(\d{1,2}) to (\d{1,2}) (\w+) (\d{4})", cleaned_text)
-    if previous_inspection_match:
-        #print(f"Debug: Previous inspection match found: {previous_inspection_match.groups()}")
-        previous_start_day = previous_inspection_match.group(1)
-        previous_end_day = previous_inspection_match.group(2)
-        previous_month = previous_inspection_match.group(3)
-        previous_year = previous_inspection_match.group(4)
-
-        previous_end_date_str = f"{previous_end_day} {previous_month} {previous_year}"
 
         try:
-            previous_end_date = datetime.strptime(previous_end_date_str, "%d %B %Y").strftime("%d/%m/%Y")
-            #print(f"Debug: Formatted previous inspection end date: {previous_end_date}")
+            # Convert to desired format if needed
+            start_date = datetime.strptime(start_date_str, "%d %B %Y").strftime("%d/%m/%y")
+            print(f"Extracted Date: {start_date}")
         except ValueError as ve:
-            print(f"Error converting previous inspection date: {ve}")
-            previous_end_date = "01/01/1900"  # Placeholder date for conversion errors
+            print(f"Error converting date: {ve}")
+            raise ValueError("Date conversion failed")
     else:
-        #print("Debug: No previous inspection date found, using placeholder.")
-        previous_end_date = "01/01/1900"  # Placeholder date if no match found
+        print("Debug: No date found.")
+        raise ValueError("No date found")
 
     # Final debug print to verify results
-    print(f"\nStart Date: {start_date}, End Date: {end_date}, Previous Inspection End Date: {previous_end_date}")
+    print(f"\nStart Date: {start_date}")
     
-    return start_date, end_date, previous_end_date
+    return start_date
 
 
 
@@ -389,14 +318,7 @@ def extract_inspection_data_update(pdf_content):
             - 'overall_inspection_grade': The overall effectiveness grade.
             - 'inspection_start_date': The start date of the inspection.
             - 'inspection_end_date': The end date of the inspection.
-            - 'inspection_framework': The inspection framework string.
-            - 'impact_of_leaders_grade': The impact of leaders grade.
-            - 'help_and_protection_grade': The help and protection grade.
-            - 'in_care_grade': The in care grade.
-            - 'care_leavers_grade': The care leavers grade.
-            - 'sentiment_score': The sentiment score of the inspection report.
-            - 'sentiment_summary': The sentiment summary of the inspection report.
-            - 'main_inspection_topics': List of key inspection themes.
+            - ...
     
     Raises:
         ValueError: If the PDF content is not valid or cannot be processed correctly.
@@ -440,7 +362,7 @@ def extract_inspection_data_update(pdf_content):
     # extract and format inspection dates
     try:
         # Attempt to extract and format dates
-        start_date_formatted, end_date_formatted, previous_inspection_date = extract_dates_from_text(first_page_text)
+        start_date_formatted = extract_dates_from_text(first_page_text)
         
         # Validate the start date
         try:
@@ -448,26 +370,10 @@ def extract_inspection_data_update(pdf_content):
         except (ValueError, TypeError) as e:
             print(f"Error with start date: {e}")
             start_date_formatted = None
-        
-        # Validate the end date
-        try:
-            datetime.strptime(end_date_formatted, "%d/%m/%y")
-        except (ValueError, TypeError) as e:
-            print(f"Error with end date: {e}")
-            end_date_formatted = None
-        
-        # Validate the previous inspection date
-        try:
-            datetime.strptime(previous_inspection_date, "%d/%m/%Y")
-        except (ValueError, TypeError) as e:
-            print(f"Error with previous inspection date: {e}")
-            previous_inspection_date = None
 
     except ValueError as e:
         # If there was a broader issue with the extraction function itself
         start_date_formatted = None
-        end_date_formatted = None
-        previous_inspection_date = None
         print(f"Error: {e}")
 
         
@@ -480,8 +386,6 @@ def extract_inspection_data_update(pdf_content):
         # 'inspector_name':           inspector_name, 
         # 'overall_inspection_grade': inspection_grades_dict['overall_effectiveness'],
         'inspection_start_date':    start_date_formatted,
-        'inspection_end_date':      end_date_formatted,
-        'previous_inspection_date': previous_inspection_date
 
     #     # inspection sentiments (in progress)
     #     'sentiment_score':          round(sentiment_val, 4), 
@@ -554,20 +458,6 @@ def extract_text_by_pages(pdf_bytes):
     
     return pages
 
-def remove_unwanted_sections(pages_content):
-     # supercedes extract_text_from_pdf in combo with extract_text_by_pages
-     # we know the last two pages of the reports are superfluous to content/outcome detail
-    cleaned_pages = []
-    heading_found = False
-
-    for page in pages_content:
-        if "Local area partnership details" in page:
-            heading_found = True
-        
-        if not heading_found:
-            cleaned_pages.append(page)
-    
-    return cleaned_pages
 
 def clean_text(text):
     # Replace newline characters that are directly joined with the following word with a space
@@ -583,43 +473,9 @@ def clean_text(text):
 
     return text
 
-def extract_inspection_outcome_section(cleaned_text):
-    pattern = re.compile(r"Inspection outcome(.*?)Information about the local area partnership", re.DOTALL | re.IGNORECASE)
-    match = pattern.search(cleaned_text)
-    
-    if match:
-        section = match.group(1).strip()
-        
-        # Remove the last paragraph (assumes that more than 2 exist!)
-        # This typically only states strategic progress publishing etc. 
-        # E.g. "Ofsted and CQC ask that the local area partnership updates and publishes ...."
-        paragraphs = re.split(r'\n\s*\n', section)
-        
-        if len(paragraphs) > 1:
-            section = '\n\n'.join(paragraphs[:-1]).strip()
-        else:
-            section = section  # No change if there's only one paragraph
-
-        section = clean_text(section)  # Clean further non-printing chars
-
-        return section
-    else:
-        return "Inspection outcome section not found."
 
 
 
-def determine_outcome_grade(inspection_outcome_section):
-    grades = {
-        "positive experiences": 1,
-        "inconsistent experiences": 2,
-        "significant concerns": 3
-    }
-    
-    for phrase, grade in grades.items():
-        if phrase in inspection_outcome_section:
-            return grade
-    
-    return None  # If no matching phrase is found
 
 
 def parse_inspection_date(date_string):
@@ -634,76 +490,7 @@ def parse_inspection_date(date_string):
 
 
 
-def extract_next_inspection(inspection_outcome_section):
-    monitoring_pattern = re.compile(r"monitoring inspection will be carried out within approximately (\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve) (years?|months?)", re.IGNORECASE)
-    full_patterns = [
-        re.compile(r"full reinspection will be within approximately (\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve) (years?|months?)", re.IGNORECASE),
-        re.compile(r"the next full area SEND inspection will be within approximately (\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve) (years?|months?)", re.IGNORECASE)
-    ]
-    
-    # Check for monitoring inspection first
-    match = monitoring_pattern.search(inspection_outcome_section)
-    if not match:
-        # No intrim inspection was found, must be a full inspection due next
-        for pattern in full_patterns:
-            match = pattern.search(inspection_outcome_section)
-            if match:
-                break
-    
-    if match:
-        # Convert text numbers to numeric
-        number_map = {
-            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-            "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
-            "eleven": 11, "twelve": 12
-        }
-        number_str = match.group(1).lower()
-        time_frame = number_map.get(number_str, number_str)  # Convert text to number if needed
-        unit = match.group(2).lower()
-        
-        return f"{time_frame} {unit}"
-    
-    return None  # If no matching time frame is found
 
-
-
-def calculate_next_inspection_by_date(last_inspection_date, next_inspection_timeframe):
-    if not last_inspection_date:
-        return "Last inspection date not provided"
-
-    if not next_inspection_timeframe:
-        return "Next inspection time frame not found"
-
-    # Parse the inspection_end_date
-    try:
-        last_inspection_date_parsed = parse_inspection_date(last_inspection_date)
-    except ValueError as e:
-        return str(e)
-
-    # Extract number and unit from next_inspection_timeframe
-    pattern = re.compile(r"(\d+) (years?|months?)", re.IGNORECASE)
-    # print(type(next_inspection_timeframe))  # testing
-    match = pattern.search(next_inspection_timeframe)
-    
-    if match:
-        number = int(match.group(1))
-        unit = match.group(2).lower()
-
-        # testing
-        print(f"calculate_next_inspection_by_date/number+unit: {number}, {unit}")  # testing
-
-        if 'year' in unit:
-            next_inspection_date = last_inspection_date_parsed + relativedelta(years=number)
-        elif 'month' in unit:
-            next_inspection_date = last_inspection_date_parsed + relativedelta(months=number)
-        
-        # testing
-        #outgoing = next_inspection_date.strftime("%d/%m/%y")
-        #print(f"calculate_next_inspection_by_date/next_date: {outgoing}")  # testing
-
-        return next_inspection_date.strftime("%d/%m/%y")
-    
-    return "Invalid next inspection time frame"
 
 
 def parse_date_new(date_input, date_format=None, output_format="%d/%m/%y", return_as_date=False):
@@ -836,7 +623,8 @@ def process_provider_links(provider_links):
             # area send full inspection, pdf - 12 july 2024
 
             # For now at least, web page|non-visual elements search terms hard-coded
-            if 'area' in nonvisual_text and 'send' in nonvisual_text and 'full inspection' in nonvisual_text:
+            # For this scrape looking for 'Joint area child protection inspection'
+            if 'joint' in nonvisual_text and 'area' in nonvisual_text and 'inspection' in nonvisual_text:
 
                 # Create the filename and download the PDF (this filetype needs to be hard-coded here)
                 filename = nonvisual_text.replace(', pdf', '') + '.pdf'
@@ -857,20 +645,7 @@ def process_provider_links(provider_links):
                     f.write(pdf_content)
 
   
-                pdf_pages_content = extract_text_by_pages(pdf_content)
-                pdf_pages_content_reduced = remove_unwanted_sections(pdf_pages_content)
-
-                # Combine pages back into a single text
-                pdf_content_reduced = "\n".join(pdf_pages_content_reduced)
-
-                # Extract the "Inspection outcome" section
-                inspection_outcome_section = extract_inspection_outcome_section(pdf_content_reduced)
-
-                # Determine the outcome grade
-                outcome_grade = determine_outcome_grade(inspection_outcome_section)
-            
-                # Next inspection time-frame (comnes back as f"{time_frame} {unit}")
-                next_inspection = extract_next_inspection(inspection_outcome_section)
+                # pdf_pages_content = extract_text_by_pages(pdf_content)
 
                # Extract the local authority and inspection link, and add the data to the list
                 if not found_inspection_link:
@@ -883,7 +658,7 @@ def process_provider_links(provider_links):
                     # print(f"la:{local_authority}")
                     # print(f"inspectionlink:{inspection_link}")
 
-                
+            
 
                     # Extract the report published date
                     report_published_date_str = filename.split('-')[-1].strip().split('.')[0] # published date appears after '-' 
@@ -911,14 +686,10 @@ def process_provider_links(provider_links):
                         # overall_effectiveness = inspection_data_dict['overall_inspection_grade']
                         # inspector_name = inspection_data_dict['inspector_name']
                         inspection_start_date = inspection_data_dict['inspection_start_date']
-                        inspection_end_date = inspection_data_dict['inspection_end_date']
-                        previous_inspection_date = inspection_data_dict['previous_inspection_date']
-
+  
 
                         # format dates for output                       
                         inspection_start_date_formatted = format_date_for_report(inspection_start_date, "%d/%m/%y")
-                        inspection_end_date_formatted = format_date_for_report(inspection_end_date, "%d/%m/%y")
-                        previous_inspection_date_formatted = format_date_for_report(previous_inspection_date, "%d/%m/%Y") # Note YYYY not yy (required for placeholder date)
 
                         # Format the provider directory as a file path link (in readiness for such as Excel)
                         provider_dir_link = f"{provider_dir}"
@@ -938,9 +709,7 @@ def process_provider_links(provider_links):
                         #print(f"inspection_start_date_formatted: {inspection_start_date_formatted}")
                         #print(f"inspection_end_date_formatted: {inspection_end_date_formatted} | next_inspection: {next_inspection}")
 
-                        # problematic end date, means more likely to get success on start date (only 2/3 days difference)
-                        next_inspection_by_date = calculate_next_inspection_by_date(inspection_start_date_formatted, next_inspection)
-
+            
                         # testing
                         #print(f"next_inspection_by_date(after processing): {next_inspection_by_date}")
 
@@ -948,16 +717,11 @@ def process_provider_links(provider_links):
                                         'urn': urn,
                                         'local_authority':          la_name_str,
                                         'inspection_link':          inspection_link,
-                                        'outcome_grade':            outcome_grade,
 
-                                        'previous_inspection_date': previous_inspection_date_formatted,
                                         'inspection_start_date':    inspection_start_date_formatted,
-                                        'inspection_end_date':      inspection_end_date_formatted,
                                         'publication_date':         report_published_date,
-                                        'next_inspection':          next_inspection,
-                                        'next_inspection_by_date':  next_inspection_by_date,
                                         'local_link_to_all_inspections': provider_dir_link,
-                                        'inspection_outcome_text':  inspection_outcome_section,
+                                        # 'inspection_outcome_text':  inspection_outcome_section,
 
                                         # 'inspection_framework':   inspection_framework,
                                         # 'inspector_name':         inspector_name,
@@ -1130,12 +894,12 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
         None
     """
     # Define the page title and introduction text
-    page_title = "Ofsted CS SEND Inpections Overview"
+    page_title = "Ofsted CS JTAI Inpections Overview"
     intro_text = (
-        'Summarised outcomes of published short and standard SEND inspection reports by Ofsted, refreshed weekly.<br/>'
+        'Summarised outcomes of published JTAI inspection reports by Ofsted, refreshed weekly.<br/>'
         'An expanded version of the shown summary sheet, refreshed concurrently, is available to '
-        '<a href="ofsted_childrens_services_send_overview.xlsx">download here</a> as an .xlsx file. '
-        '<br/>Data summary is based on the original <i>SEND Outcomes Summary</i> published periodically by the ADCS: '
+        '<a href="ofsted_childrens_services_jtai_overview.xlsx">download here</a> as an .xlsx file. '
+        '<br/>Data summary is based on the original <i>JTAI Outcomes Summary</i> published periodically by the ADCS: '
         '<a href="https://www.adcs.org.uk/inspection-of-childrens-services/">https://www.adcs.org.uk/inspection-of-childrens-services/</a>. '
         '<a href="https://github.com/data-to-insight/ofsted-send-scrape-tool/blob/main/README.md">Read the tool/project background details and future work.</a>.'
     )
@@ -1143,7 +907,7 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     disclaimer_text = (
         'Disclaimer: This summary is built from scraped data direct from https://reports.ofsted.gov.uk/ published PDF inspection report files. '
         'As a result of the nuances|variance within the inspection report content or pdf encoding, we\'re noting some problematic data extraction for a small number of LAs*.<br/> '
-        '*Known LA extraction issues: 01/01/1900 == No-date-data|unreadble, Enfield(Next Inspection Date not showing)<br/>'
+        '*Known LA extraction issues: <br/>'
         '<a href="mailto:datatoinsight.enquiries@gmail.com?subject=Ofsted-Scrape-Tool">Feedback</a> on specific problems|inaccuracies|suggestions welcomed.*'
     )
 
@@ -1375,11 +1139,9 @@ save_data_update(send_inspection_summary_df, export_summary_filename, file_type=
 # Remove for now until link fixed applied: 'local_link_to_all_inspections',
 column_order = [
                 'urn','la_code','region_code','ltla23cd','local_authority',
-                'previous_inspection_date',
-                'inspection_start_date', 'inspection_end_date',
-                'outcome_grade', 
-                'inspection_outcome_text',
-                'publication_date', 'next_inspection', 'next_inspection_by_date',
+                'inspection_start_date', 
+                # 'inspection_outcome_text',
+                'publication_date', 
                 #'local_link_to_all_inspections', 
                 'inspection_link'
                 ]
