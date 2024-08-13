@@ -295,8 +295,8 @@ def extract_dates_from_text(text):
         print("Debug: No date found.")
         raise ValueError("No date found")
 
-    # Final debug print to verify results
-    print(f"\nStart Date: {start_date}")
+    # Was the date captured ok? 
+    print(f"\nInspection Date: {start_date}")
     
     return start_date
 
