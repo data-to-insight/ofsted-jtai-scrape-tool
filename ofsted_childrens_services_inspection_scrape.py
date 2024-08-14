@@ -752,28 +752,43 @@ def process_provider_links(provider_links):
                     year_matches = list(year_pattern.finditer(inspection_theme))
                     
                     if year_matches:
-                        # need to ensure we're at the back of the date related text
+                        # need to make sure we're at the last instance of a yyyy
                         last_year_match = year_matches[-1]
                         
-                        # get end position of the last year in the string, the index
+                        # Get index of last yyyy
                         end_position = last_year_match.end()
                         
-                        # truncate inspection_theme up to end of the last year, i.e. rem the rest/following
+                        # Trunc inspection_theme , cut off at point where we located last yyyy
                         truncated_inspection_theme = inspection_theme[:end_position]
                         
+                        # add back in a . in case
                         if not truncated_inspection_theme.endswith('.'):
                             truncated_inspection_theme += "."
                         
-                        # update the inspection_theme with the truncated version
                         inspection_theme = truncated_inspection_theme
                         
-
                     else:
-                        # No yr? leave as is or raise )
-                        print("No year found in the inspection theme. No changes made..")
+                        # No year found, search for "Ofsted" (had this with liverpool)
+                        ofsted_position = inspection_theme.find("Ofsted")
+                        if ofsted_position != -1:
+                            # trunc at the start of "Ofsted"
+                            # thus get rid of everything from that point (i.e. there was no . after yyyy as no yyy found)
+                            inspection_theme = inspection_theme[:ofsted_position].strip()
+                            
+                            inspection_theme = inspection_theme.rstrip(',') # clean up
+
+                            if not inspection_theme.endswith('.'): # tidy up
+                                inspection_theme += "."
+                        else:
+                            print("No year or 'Ofsted' found. Leaving the text unchanged.")
+
+                    inspection_theme = inspection_theme.capitalize() # clean up
+
                 else:
                     inspection_theme = None
                     print("Inspection theme wasn't identified.")
+                # end inspection theme scrape
+
 
 
                 if case_study_match and len(case_study_match.groups()) > 0:
