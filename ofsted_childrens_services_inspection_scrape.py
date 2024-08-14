@@ -703,12 +703,12 @@ def process_provider_links(provider_links):
                 priority_action_pattern = re.compile(r"Areas for [Pp]riority [Aa]ction\s*(.*?)$", re.DOTALL)
                 improvement_pattern = re.compile(r"Areas for [Ii]mprovement\s*(.*?)$", re.DOTALL)
                 key_strengths_pattern = re.compile(r"Key [Ss]trengths\s*(.*?)$", re.DOTALL)
+                strengths_pattern = re.compile(r"[Ss]trengths\s*(.*?)$", re.DOTALL)  # Secondary pattern for alternative key_strengths == "Strengths"
                 headline_findings_pattern = re.compile(r"Headline [Ff]indings\s*(.*?)$", re.DOTALL)
                 needs_to_improve_pattern = re.compile(r"What [Nn]eeds to [Ii]mprove\s*(.*?)$", re.DOTALL)
 
                 # case_study_pattern = re.compile(r"Case [Ss]tudy:\s*(.*?)\s*(?:NextSection|$)", re.DOTALL | re.IGNORECASE)
                 case_study_pattern = re.compile(r"Case [Ss]tudy:\s*(.*)", re.DOTALL | re.IGNORECASE) # capture ALL after this heading
-
 
                 # Extract sections
                 priority_action_match = priority_action_pattern.search(pdf_pages_content)
@@ -718,7 +718,6 @@ def process_provider_links(provider_links):
                 needs_to_improve_match = needs_to_improve_pattern.search(pdf_pages_content)
 
                 case_study_match = case_study_pattern.search(pdf_pages_content)
-
 
                 # testing
                 #print(case_study_match)
@@ -1031,19 +1030,19 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
         '<a href="ofsted_childrens_services_jtai_overview.xlsx">download here</a> as an .xlsx file. '
         '<br/>Data summary is based on the original <i>JTAI Outcomes Summary</i> published periodically by the ADCS: '
         '<a href="https://www.adcs.org.uk/inspection-of-childrens-services/">https://www.adcs.org.uk/inspection-of-childrens-services/</a>. '
-        '<a href="https://github.com/data-to-insight/ofsted-ilacs-scrape-tool/blob/main/README.md">Read the source ILACS tool/project background details and future work.</a>.'
     )
 
     disclaimer_text = (
-        'Disclaimer: This summary is built from scraped data direct from https://reports.ofsted.gov.uk/ published PDF inspection report files.<br/>'
-        'As a result of the nuances|variance within the inspection report content or pdf encoding, we\'re noting problematic data extraction for a small number of LAs*.<br/> '
-        '*Known extraction issues: <ul>'
-        '<li>JTAI report structure varies pre|post 2023(?), hence sparse|mixed summary columns until improved|agreed approach finalised.</li>'
-        '<li>ADCS published inspection Themes unavailable via current scrape process. This being worked on currently.</li>'
+        'Disclaimer: This summary is built from scraped data direct from https://reports.ofsted.gov.uk/ published PDF inspection report files.<br/><br/>'
+        'Nuanced|variable inspection report content, structure and pdf encoding occasionally results in problematic data extraction for a small number of LAs.<br/> '
+        'Known extraction issues: <ul>'
+        '<li>JTAI report structure varies pre|post 2023(?), resulting in sparse|mixed summary columns. [In development].</li>'
+        '<li>ADCS published inspection Themes unavailable via current scrape process. [In development].</li>'
         '<li>Publication date, isn\'t available within inspection reports and is therefore based on CSS tag data and may not always reflect actual report publication.</li>'
         '<li>Where 1+ case studies are reported on (e.g. Peterborough City), only 1 summary is pulled through.</li>'
         '</ul>'
-        '<a href="mailto:datatoinsight.enquiries@gmail.com?subject=Ofsted-Scrape-Tool">Feedback</a> highlighting problems|inaccuracies|suggestions welcomed.'
+        '<a href="mailto:datatoinsight.enquiries@gmail.com?subject=Ofsted-JTAI-Scrape-Tool">Feedback</a> highlighting problems|inaccuracies|suggestions welcomed.'
+        '<a href="https://github.com/data-to-insight/ofsted-ilacs-scrape-tool/blob/main/README.md">Read the source ILACS tool/project for background details and future work.</a>.'
     )
 
     # # testing
