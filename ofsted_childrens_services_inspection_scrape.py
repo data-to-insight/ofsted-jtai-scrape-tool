@@ -706,6 +706,12 @@ def process_provider_links(provider_links):
                 strengths_pattern = re.compile(r"[Ss]trengths\s*(.*?)$", re.DOTALL)  # Secondary pattern for alternative key_strengths == "Strengths"
                 headline_findings_pattern = re.compile(r"Headline [Ff]indings\s*(.*?)$", re.DOTALL)
                 needs_to_improve_pattern = re.compile(r"What [Nn]eeds to [Ii]mprove\s*(.*?)$", re.DOTALL)
+                
+                # Search for inspection <Theme> - only option is to find "response to", capture content until the next period
+                inspection_theme_pattern = re.compile(r'response to(.*?)(\.)', re.IGNORECASE)
+
+
+                    
 
                 # case_study_pattern = re.compile(r"Case [Ss]tudy:\s*(.*?)\s*(?:NextSection|$)", re.DOTALL | re.IGNORECASE)
                 case_study_pattern = re.compile(r"Case [Ss]tudy:\s*(.*)", re.DOTALL | re.IGNORECASE) # capture ALL after this heading
@@ -714,13 +720,16 @@ def process_provider_links(provider_links):
                 priority_action_match = priority_action_pattern.search(pdf_pages_content)
                 improvement_match = improvement_pattern.search(pdf_pages_content)
                 key_strengths_match = key_strengths_pattern.search(pdf_pages_content)
+                # Fallback to "Strengths" if "Key Strengths" heading not found (this found in >2 reports)
+                if not key_strengths_match:
+                    key_strengths_match = strengths_pattern.search(pdf_pages_content)
                 headline_findings_match = headline_findings_pattern.search(pdf_pages_content)
                 needs_to_improve_match = needs_to_improve_pattern.search(pdf_pages_content)
 
                 case_study_match = case_study_pattern.search(pdf_pages_content)
 
-                # testing
-                #print(case_study_match)
+                inspection_theme_match = inspection_theme_pattern.search(pdf_pages_content)
+
 
                 # Extracted text or None if not found
                 areas_for_priority_action = priority_action_match.group(1).strip() if priority_action_match else None
@@ -728,6 +737,43 @@ def process_provider_links(provider_links):
                 key_strengths = key_strengths_match.group(1).strip() if key_strengths_match else None
                 headline_findings = headline_findings_match.group(1).strip() if headline_findings_match else None
                 needs_to_improve = needs_to_improve_match.group(1).strip() if needs_to_improve_match else None
+
+                # grabbing theme is slightly messy on some due to extra, mid-sentence content, need to clean up
+                if inspection_theme_match:
+                    # Extract the matched text and ensure it ends with a period (should do)
+                    inspection_theme = inspection_theme_match.group(1).strip()
+                    if not inspection_theme.endswith('.'):
+                        inspection_theme += "."
+
+                    # Regular expression to find all four-digit numbers (years) (could be 1|2 instances)
+                    year_pattern = re.compile(r'\b\d{4}\b')
+                    
+                    # Find ALLLL matches of years in the text
+                    year_matches = list(year_pattern.finditer(inspection_theme))
+                    
+                    if year_matches:
+                        # need to ensure we're at the back of the date related text
+                        last_year_match = year_matches[-1]
+                        
+                        # get end position of the last year in the string, the index
+                        end_position = last_year_match.end()
+                        
+                        # truncate inspection_theme up to end of the last year, i.e. rem the rest/following
+                        truncated_inspection_theme = inspection_theme[:end_position]
+                        
+                        if not truncated_inspection_theme.endswith('.'):
+                            truncated_inspection_theme += "."
+                        
+                        # update the inspection_theme with the truncated version
+                        inspection_theme = truncated_inspection_theme
+                        
+
+                    else:
+                        # No yr? leave as is or raise )
+                        print("No year found in the inspection theme. No changes made..")
+                else:
+                    inspection_theme = None
+                    print("Inspection theme wasn't identified.")
 
 
                 if case_study_match and len(case_study_match.groups()) > 0:
@@ -756,6 +802,7 @@ def process_provider_links(provider_links):
                     # No case study data / heading(s) found
                     case_study_body = None
                     case_study_title = None
+
 
 
                 # Get the first two sentences only - used in reduced output summary
@@ -847,6 +894,7 @@ def process_provider_links(provider_links):
                                         'local_link_to_all_inspections':    provider_dir_link,
                                         
                                         # 'main_inspection_topics': main_inspection_topics
+                                        'inspection_theme':                 inspection_theme,
                                         'summary_priority_action':          summary_priority_action,        # reduced sentences only
                                         'summary_improvement':              summary_improvement,            # reduced sentences only
                                         'summary_key_strengths':            summary_key_strengths,          # reduced sentences only
@@ -1257,6 +1305,7 @@ save_data_update(inspection_summary_df, export_summary_filename, file_type=expor
 column_order = [
                 'urn','la_code','region_code','ltla23cd','local_authority',
                 'inspection_start_date', 
+                'inspection_theme',
                 'summary_priority_action',
                 'summary_improvement',
                 'summary_key_strengths',
