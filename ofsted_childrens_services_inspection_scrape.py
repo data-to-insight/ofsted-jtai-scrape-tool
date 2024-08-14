@@ -1035,10 +1035,15 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     )
 
     disclaimer_text = (
-        'Disclaimer: This summary is built from scraped data direct from https://reports.ofsted.gov.uk/ published PDF inspection report files. '
-        'As a result of the nuances|variance within the inspection report content or pdf encoding, we\'re noting some problematic data extraction for a small number of LAs*.<br/> '
-        '*Known extraction issues: JTAI report structure varies pre|post 2023. ADCS published inspection Themes unavailable via current scrape process. Publication date is based on CSS tag data and may not always reflect actual report publication. Where 1+ case studies are reported on, only 1 is pulled through.<br/>'
-        '<a href="mailto:datatoinsight.enquiries@gmail.com?subject=Ofsted-Scrape-Tool">Feedback</a> on specific problems|inaccuracies|suggestions welcomed.*'
+        'Disclaimer: This summary is built from scraped data direct from https://reports.ofsted.gov.uk/ published PDF inspection report files.<br/>'
+        'As a result of the nuances|variance within the inspection report content or pdf encoding, we\'re noting problematic data extraction for a small number of LAs*.<br/> '
+        '*Known extraction issues: <ul>'
+        '<li>JTAI report structure varies pre|post 2023(?), hence sparse|mixed summary columns until improved|agreed approach finalised.</li>'
+        '<li>ADCS published inspection Themes unavailable via current scrape process. This being worked on currently.</li>'
+        '<li>Publication date, isn\'t available within inspection reports and is therefore based on CSS tag data and may not always reflect actual report publication.</li>'
+        '<li>Where 1+ case studies are reported on (e.g. Peterborough City), only 1 summary is pulled through.</li>'
+        '</ul>'
+        '<a href="mailto:datatoinsight.enquiries@gmail.com?subject=Ofsted-Scrape-Tool">Feedback</a> highlighting problems|inaccuracies|suggestions welcomed.'
     )
 
     # # testing
@@ -1069,8 +1074,9 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     # # If a web link column is specified, convert that column's values to HTML hyperlinks
     # # Shortening the hyperlink text by taking the part after the last '/'
     if web_link_column:
-        data[web_link_column] = data[web_link_column].apply(lambda x: f'<a href="{x}">ofsted.gov.uk/{x.rsplit("/", 1)[-1]}</a>') # publ_date
-    # if web_link_column:
+        data[web_link_column] = data[web_link_column].apply(lambda x: f'<a href="{x}">ofsted.gov.uk/{x.rsplit("/", 1)[-1]}</a>') 
+        
+    # if web_link_column: # if the link is a bytes obj, this might be problematic
     #     data[web_link_column] = data[web_link_column].apply(lambda x: f'<a href="{x}">ofsted.gov.uk/{x.rsplit("/", 1)[-1]}</a>' if isinstance(x, str) else x)  # publ_date
 
     # Convert column names to title/upper case
