@@ -1086,7 +1086,7 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
         None
     """
     # Define the page title and introduction text
-    page_title = "Ofsted CS JTAI Inpections Overview"
+    page_title = "Ofsted CS JTAI Inspections Overview"
     intro_text = (
         'Summarised outcomes of published JTAI inspection reports by Ofsted, refreshed weekly.<br/>'
         'An expanded version of the shown summary sheet, refreshed concurrently, is available to '
