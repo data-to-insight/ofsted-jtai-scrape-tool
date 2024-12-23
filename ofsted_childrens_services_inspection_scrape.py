@@ -263,7 +263,6 @@ def extract_dates_from_text(text):
     # ..
 
     """
-    # print("Debug: Starting date extraction")
 
     if not text:
         print("Debug: Input text is empty or None.")
@@ -851,7 +850,7 @@ def process_provider_links(provider_links):
                     # get/format date(s) (as dt objects)
                     ## revised to capture 'actual' published date from css tag data
                     report_published_date = format_date(report_published_date_str, '%d %B %Y', '%d/%m/%y')
-                    print(f"Debug: Report Published Date: {report_published_date} was {publication_date}")
+                    # print(f"Debug: Report Published Date: {report_published_date} was {publication_date}")
 
 
                     # Now get the in-document data
