@@ -77,7 +77,7 @@ from dateutil.relativedelta import relativedelta
 try:
     import fitz  # PyMuPDF
     import tabula  
-    import PyPDF2  
+    import PyPDF2  # depreciated 090225 - need to swap back to pypdf! 
 except ModuleNotFoundError:
     print("Please install 'tabula-py' and 'PyPDF2' using pip")
 
