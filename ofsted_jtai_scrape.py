@@ -1,7 +1,8 @@
 #
 # Export options
 
-export_summary_filename = 'ofsted_childrens_services_jtai_overview'
+export_summary_filename = 'ofsted_csc_jtai_overview'
+d2i_contact_email = "datatoinsight.enquiries@gmail.com"
 # export_file_type         = 'csv' # Excel / csv currently supported
 export_file_type         = 'excel'
 
@@ -1084,28 +1085,39 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     Returns:
         None
     """
+
     # Define the page title and introduction text
     page_title = "Ofsted CS JTAI Inspections Overview"
-    intro_text = (
-        'Summarised outcomes of published JTAI inspection reports by Ofsted, refreshed weekly.<br/>'
-        'An expanded version of the shown summary sheet, refreshed concurrently, is available to '
-        '<a href="ofsted_childrens_services_jtai_overview.xlsx">download here</a> as an .xlsx file. '
-        '<br/>Data summary is based on the original <i>JTAI Outcomes Summary</i> published periodically by the ADCS: '
-        '<a href="https://www.adcs.org.uk/inspection-of-childrens-services/">https://www.adcs.org.uk/inspection-of-childrens-services/</a>. '
-    )
+    
+    intro_text = f"""Summarised outcomes of published JTAI inspection reports by Ofsted, refreshed weekly.<br/>'
+    An expanded version of the shown summary sheet, refreshed concurrently, is available to
+    <a href="{export_summary_filename}.xlsx">download here</a> as an .xlsx file.
+    <br/>Data summary is based on the original <i>ILACS Outcomes Summary</i> published periodically by the ADCS:
+    <a href="https://adcs.org.uk/inspection/article/ilacs-outcomes-summary">https://adcs.org.uk/inspection/article/ilacs-outcomes-summary</a>.
+    <a href="https://github.com/data-to-insight/ofsted-ilacs-scrape-tool/blob/main/README.md">Read the tool/project background details and future work.</a>.
+    """
 
-    disclaimer_text = (
-        'Disclaimer: This summary is built from scraped data direct from https://reports.ofsted.gov.uk/ published PDF inspection report files.<br/><br/>'
-        'Nuanced|variable inspection report content, structure and pdf encoding occasionally results in problematic data extraction for a small number of LAs.<br/> '
-        'Known extraction issues: <ul>'
-        '<li>JTAI report structure varies pre|post 2023(?), resulting in sparse|mixed summary columns. [In development].</li>'
-        '<li>ADCS published inspection Themes unavailable via current scrape process. [In development].</li>'
-        '<li>Publication date, isn\'t available within inspection reports and is therefore based on CSS tag data and may not always reflect actual report publication.</li>'
-        '<li>Where 1+ case studies are reported on (e.g. Peterborough City), only 1 summary is pulled through.</li>'
-        '</ul>'
-        '<a href="mailto:datatoinsight.enquiries@gmail.com?subject=Ofsted-JTAI-Scrape-Tool">Feedback</a> highlighting problems|inaccuracies|suggestions welcomed.'
-        '<a href="https://github.com/data-to-insight/ofsted-ilacs-scrape-tool/blob/main/README.md">Read the source ILACS tool/project for background details and future work.</a>.'
-    )
+    disclaimer_text = f"""
+    Disclaimer: This summary is built from scraped data direct from 
+    <a href="https://reports.ofsted.gov.uk/">https://reports.ofsted.gov.uk/</a> published PDF inspection report files.<br/><br/>
+
+    Nuanced | variable inspection report content, structure, and PDF encoding occasionally result in problematic data extraction for a small number of LAs.<br/>
+
+    <b>Known extraction issues:</b>
+    <ul>
+        <li>JTAI report structure varies pre | post 2023(?), resulting in sparse | mixed summary columns. [In development].</li>
+        <li>ADCS published inspection Themes unavailable via the current scrape process. [In development].</li>
+        <li>Publication date isn't available within inspection reports and is therefore based on CSS tag data and may not always reflect actual report publication.</li>
+        <li>Where 1+ case studies are reported on (e.g. Peterborough City), only 1 summary is pulled through.</li>
+    </ul>
+
+    <a href="mailto:{d2i_contact_email}?subject=Ofsted-JTAI-Scrape-Tool">Feedback</a> highlighting problems | inaccuracies | suggestions is welcomed.<br/>
+
+    <a href="https://github.com/data-to-insight/ofsted-ilacs-scrape-tool/blob/main/README.md">
+    Read the source ILACS tool/project for background details and future work.
+    </a>.
+    """
+
 
     # # testing
     # print(data.head(5))
