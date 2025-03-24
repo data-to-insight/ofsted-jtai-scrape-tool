@@ -32,16 +32,29 @@ repo_path = '/workspaces/ofsted-jtai-scrape-tool'
 #
 # Ofsted site/page admin settings
 
-max_page_results = 200 # Set max number of search results to show on page(MUST be > total number of LA's!) 
+# Define max results per page (Now limited to 100)
+max_page_results = 100  # new ofsted search limit at w/c 100225
 url_stem = 'https://reports.ofsted.gov.uk/'
+
+# Base search URL (excluding pagination controls)
+# equates to Ofsted base search criteria of 'childrens social care + local authority childrens services' 
+search_url = 'search?q=&location=&lat=&lon=&radius=&level_1_types=3&level_2_types%5B%5D=12'
+
+# pagination params placehold
+pagination_param = '&start={start}&rows=' + str(max_page_results)
+
+data = []
+start = 0
+max_results = 160  # expecting 153 @110225
+
 
 
 # search url equates to Ofsted base search criteria of 'childrens social care + local authority childrens services' 
-search_url = 'search?q=&location=&lat=&lon=&radius=&level_1_types=3&level_2_types%5B%5D=12'
-max_page_results_url = '&rows=' + str(max_page_results) # Coerce results page to display ALL providers on single results page without next/pagination
+# search_url = 'search?q=&location=&lat=&lon=&radius=&level_1_types=3&level_2_types%5B%5D=12'
+# max_page_results_url = '&rows=' + str(max_page_results) # Coerce results page to display ALL providers on single results page without next/pagination
 
-# resultant complete url to process
-url = url_stem + search_url + max_page_results_url 
+# # resultant complete url to process
+# url = url_stem + search_url + max_page_results_url 
 
 
 # #
@@ -1260,9 +1273,13 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
 #
 # Scrape Ofsted inspection report data
 #
-data = []
-while True:
-    # Fetch and parse the HTML content of the current URL
+while start < max_results:
+    # Construct URL for current chunk
+    url = url_stem + search_url + pagination_param.format(start=start)
+
+    print(f"Fetching: {url}")  # Debug output
+
+    # Fetch and parse search page
     soup = get_soup(url)
     
     # Find all 'provider' links on the page
