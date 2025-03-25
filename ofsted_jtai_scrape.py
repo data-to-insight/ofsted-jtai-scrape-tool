@@ -24,7 +24,21 @@ pdf_data_capture = True # True is default (scrape within pdf inspection reports 
                         # False == only pdfs/list of LA's+link to most recent exported. Not inspection results.
 
 
-repo_path = '/workspaces/ofsted-jtai-scrape-tool'
+
+
+# Needed towards git actions workflow
+# Use GITHUB_WORKSPACE environment variable if available,
+# otherwise fall back to the default path.
+repo = os.environ.get('GITHUB_WORKSPACE', '/workspaces/ofsted-jtai-scrape-tool')
+
+try:
+    repo_path = git.Repo(repo)
+except git.exc.NoSuchPathError:
+    print(f"Error initialising repo path for inspection reports: {repo}")
+    # Handle the error as needed, for example, exit or use an alternative approach.
+    raise
+
+
 
 
 
@@ -102,11 +116,6 @@ try:
 except ModuleNotFoundError:
     print("Please install 'openpyxl' and 'xlsxwriter' using pip")
 
-try:
-    from sklearn.metrics.pairwise import cosine_similarity
-    from sklearn.feature_extraction.text import CountVectorizer
-except ModuleNotFoundError:
-    print("Please install 'scikit-learn' using pip")
 
 # Configure logging/logging module
 import warnings
