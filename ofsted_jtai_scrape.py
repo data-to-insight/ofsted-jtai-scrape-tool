@@ -86,10 +86,11 @@ from dateutil.relativedelta import relativedelta
 # pdf search/data extraction
 try:
     import fitz  # PyMuPDF
-    import tabula  
-    import PyPDF2  # depreciated 090225 - need to swap back to pypdf! 
-except ModuleNotFoundError:
-    print("Please install 'tabula-py' and 'PyPDF2' using pip")
+    import PyPDF2 # depreciated 090225 - need to swap back to pypdf! 
+except ModuleNotFoundError as e:
+    print(f"Module not found: {e}. Please install the required packages.")
+    import sys
+    sys.exit(1)
 
 
 # handle optional excel export+active file links

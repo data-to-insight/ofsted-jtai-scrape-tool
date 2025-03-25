@@ -4,6 +4,7 @@ textblob
 nltk
 xlsxwriter
 PyPDF2
+PyMuPDF
 requests
 beautifulsoup4
 GitPython
