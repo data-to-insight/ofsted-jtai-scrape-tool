@@ -27,15 +27,14 @@ pdf_data_capture = True # True is default (scrape within pdf inspection reports 
 
 
 # Needed towards git actions workflow
-# Use GITHUB_WORKSPACE environment variable if available,
-# otherwise fall back to the default path.
+# Use GITHUB_WORKSPACE env var if available(workflow actions), 
+# otherwise fall back to the default path(codespace).
 repo = os.environ.get('GITHUB_WORKSPACE', '/workspaces/ofsted-jtai-scrape-tool')
 
 try:
     repo_path = git.Repo(repo)
 except git.exc.NoSuchPathError:
     print(f"Error initialising repo path for inspection reports: {repo}")
-    # Handle the error as needed, for example, exit or use an alternative approach.
     raise
 
 
