@@ -1,15 +1,16 @@
 # Ofsted-JTAI-Scrape-Tool
-On demand Ofsted JTAI results summary via inspection reports scrape from the Ofsted.gov pages
+On demand Ofsted JTAI results summary via inspection reports scrape from the Ofsted.gov pages  
 Published: https://data-to-insight.github.io/ofsted-jtai-scrape-tool/
 -
-### Updates to this JTAI summary page occur on a weekly basis.  
+### Updates to the JTAI summary page occur on at least a weekly basis.  
 
 ## Brief overview
 This project is based on a proof-of-concept, 'can we do this' basis. As such it's supplied very much with the disclaimer of please check the vitals if you're embedding it into something more critical, and likewise pls feel free to feedback into the project with suggestions. The structure of the code and processes have much scope for improvement, but some of the initial emphasis was on maintaining a level of readability so that others might have an easier time of taking it further. That said, we needed to take some of the scrape/cleaning processes further than anticipated due to inconsistencies in the source site/data and this has ultimately impacted the intended 're-usable mvp' approach to codifying a solution for the original problem. 
 
 The results structure and returned data is based almost entirely on the originating JTAI Summary produced/refreshed periodically by the ADCS; the use of which has previously underpinned several D2I projects. We're aware of several similar collections of longer-term work on and surrounding the Ofsted results theme, and would be happy to hear from those who perhaps also have bespoke ideas for changes here that would assist their own work. 
 
-The scrape process is completed by running a single Python script: ofsted_childrens_services_inspection_scrape.py
+
+The scrape process is completed by running a single Python script: ofsted_jtai_scrape.py
 
 
 ## Export(s)

@@ -1138,11 +1138,8 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     </a>.
     """
 
-
-    # # testing
-    # print(data.head(5))
     data = data[column_order]
-
+    global repo  # Use repo object initialised earlier
 
 
     # # Convert specified columns to title case
@@ -1186,14 +1183,7 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     # specific folder to monitor for changes
     inspection_reports_folder = 'export_data/inspection_reports'
 
-    # Testing / DEBUG - now defined prior
-    # try:
-    #     # Init the repo object (so we know starting point for monitoring changes)
-    #     repo = git.Repo(repo_path) 
-    # except Exception as e:
-    #     print(f"Error initialising defined repo path for inspection reports: {e}")
-    #     raise
-    
+
     try:
     # Get current status of repo
         changed_files = [item.a_path for item in repo.index.diff(None) if item.a_path.startswith(inspection_reports_folder)]
