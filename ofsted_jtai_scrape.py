@@ -704,11 +704,13 @@ def process_provider_links(provider_links):
                 #                                             # "Joint area child protection inspection                <span class="nonvisual">Joint area child protection inspection, pdf - 14 July 2017</span></a>"
                 # print(f"nonvisualtext:{nonvisual_text}")    # e.g. "joint area child protection inspection, pdf - 14 july 2017"
                 # print(f"filename:{filename}")               # e.g. "joint area child protection inspection - 14 july 2017.pdf"
-           
-                # pdf_content = requests.get(pdf_link).content # publ_date new
-                pdf_content = requests.get(pdf_link['href']).content  # publ_date
-                with open(os.path.join(provider_dir, filename), 'wb') as f:
-                    f.write(pdf_content)
+
+                # # Turn this OFF to minimise data 
+                # # Download and stores locally each relevant PDF! 
+                pdf_content = requests.get(pdf_link['href']).content
+                # with open(os.path.join(provider_dir, filename), 'wb') as f:
+                #     f.write(pdf_content)
+                # ## END data reduction
 
     
                 pdf_pages_content = extract_text_from_pdf(pdf_content)
