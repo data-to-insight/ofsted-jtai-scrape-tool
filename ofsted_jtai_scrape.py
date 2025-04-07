@@ -1111,7 +1111,7 @@ def save_to_html(data, column_order, local_link_column=None, web_link_column=Non
     # Define the page title and introduction text
     page_title = "Ofsted CS JTAI Inspections Overview"
     
-    intro_text = f"""Summarised outcomes of published JTAI inspection reports by Ofsted, refreshed weekly.<br/>'
+    intro_text = f"""Summarised outcomes of published JTAI inspection reports by Ofsted, refreshed daily.<br/>'
     An expanded version of the shown summary sheet, refreshed concurrently, is available to
     <a href="{export_summary_filename}.xlsx">download here</a> as an .xlsx file.
     <br/>Data summary is based on the original <i>ILACS Outcomes Summary</i> published periodically by the ADCS:
