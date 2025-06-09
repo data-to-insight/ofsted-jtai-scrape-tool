@@ -292,4 +292,4 @@ metadata:
 # DECISION      : conclusion reached by an AGENT
 # ASSUMPTION    : forecast or expected STATE used for planning
 
-# Note: These types are semantic labels — spelling must match exactly (e.g. ORGANISATION not Organisation).
+# Note: These types are semantic labels — spelling must match exactly.
