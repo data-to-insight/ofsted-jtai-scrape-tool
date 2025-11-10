@@ -422,25 +422,6 @@ def find_non_printable_characters(text):
         print("No non-printable characters found.")
 
 
-def clean_pdf_content(pdf_content):
-    # Check if pdf_content is bytes and decode to string
-    if isinstance(pdf_content, bytes):
-        pdf_content = pdf_content.decode('utf-8', errors='ignore')
-    
-    # Rem non-printing characters + non-text data
-    text_content = re.sub(r'[\x00-\x1F\x7F-\x9F]', '', pdf_content)
-    
-    # Rem remaining PDF encoding remnants and metadata
-    text_content = re.sub(r'\\x[a-fA-F0-9]{2}', '', text_content)
-    text_content = re.sub(r'[/<>\r\n]', ' ', text_content)  # Remove common non-text elements
-    text_content = re.sub(r'\s{2,}', ' ', text_content)  # Replace multiple spaces with a single space
-    
-    # clean up the text
-    text_content = text_content.strip()
-    
-    return text_content
-
-
 def extract_text_from_pdf(pdf_bytes):
     # Open the PDF from bytes
     pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
