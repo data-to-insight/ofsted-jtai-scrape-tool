@@ -65,44 +65,33 @@ max_results = 160  # expecting 153 @110225
 
 #
 # Script admin settings
-
-# Standard library imports
+# Standard library
 import os
 import io
 import re
 import json
+import time
+import logging
+import warnings
 from datetime import datetime, timedelta
 
-# Third-party library imports
+# Third party
 import requests
-import git # possible case for just: from git import Repo
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, Timeout, HTTPError
 import pandas as pd
-import numpy as np
 from bs4 import BeautifulSoup
-from dateutil.relativedelta import relativedelta
-
-
-# pdf search/data extraction
-try:
-    import fitz  # PyMuPDF
-    import PyPDF2 # depreciated 090225 - need to swap back to pypdf! 
-except ModuleNotFoundError as e:
-    print(f"Module not found: {e}. Please install the required packages.")
-    import sys
-    sys.exit(1)
-
-
-# handle optional excel export+active file links
+import git
+import fitz          # PyMuPDF
+import PyPDF2
 try:
     import xlsxwriter
 except ModuleNotFoundError:
-    print("Please install 'openpyxl' and 'xlsxwriter' using pip")
+    print("Please install 'xlsxwriter' via pip")
 
-
-# Configure logging/logging module
-import warnings
-import logging
+# -- removed 101125 ---
+# added time, Timeout, HTTPError as needed
+# numpy, dateutil.relativedelta depreciated use
+# ---
 
 # wipe / reset the logging file 
 with open('output.log', 'w'):
@@ -110,7 +99,7 @@ with open('output.log', 'w'):
     pass
 
 # Keep warnings quiet unless priority
-logging.getLogger('org.apache.pdfbox').setLevel(logging.ERROR)
+
 warnings.filterwarnings('ignore')
 
 logging.basicConfig(filename='output.log', level=logging.INFO, format='%(asctime)s - %(message)s')
